@@ -671,14 +671,14 @@
             <div class="card">
                 <h2>🎓 Academic To-Do</h2>
                 <div id="academicTodos"></div>
-                <button class="add-todo-btn" onclick="addTodo('academic')">+ Add Task</button>
+                <button class="add-todo-btn" id="addAcademicBtn">+ Add Task</button>
             </div>
 
             <!-- Personal To-Do -->
             <div class="card">
                 <h2>🏠 Personal To-Do</h2>
                 <div id="personalTodos"></div>
-                <button class="add-todo-btn" onclick="addTodo('personal')">+ Add Task</button>
+                <button class="add-todo-btn" id="addPersonalBtn">+ Add Task</button>
             </div>
         </div>
 
@@ -689,14 +689,14 @@
             <div class="card">
                 <h2>🎯 Daily Habits</h2>
                 <div class="habit-grid" id="habits"></div>
-                <button class="add-todo-btn" onclick="addHabit()">+ Add Habit</button>
+                <button class="add-todo-btn" id="addHabitBtn">+ Add Habit</button>
             </div>
 
             <!-- Goals Progress -->
             <div class="card">
                 <h2>🎯 Goals Progress</h2>
                 <div id="goalsContainer"></div>
-                <button class="add-todo-btn" onclick="addGoal()">+ Add Goal</button>
+                <button class="add-todo-btn" id="addGoalBtn">+ Add Goal</button>
             </div>
 
             <!-- Pomodoro Timer -->
@@ -898,11 +898,36 @@
             
             container.innerHTML = todos.map((todo, index) => `
                 <div class="todo-item ${todo.completed ? 'completed' : ''}" data-index="${index}">
-                    <input type="checkbox" ${todo.completed ? 'checked' : ''} onchange="toggleTodo('${type}', ${index})">
-                    <span contenteditable="true" onblur="updateTodoText('${type}', ${index}, this.textContent)">${todo.text}</span>
-                    <button class="delete-btn" onclick="deleteTodo('${type}', ${index})">Delete</button>
+                    <input type="checkbox" ${todo.completed ? 'checked' : ''} data-toggle-todo="${type}" data-todo-index="${index}">
+                    <span contenteditable="true" data-todo-text="${type}" data-todo-index="${index}">${todo.text}</span>
+                    <button class="delete-btn" data-delete-todo="${type}" data-todo-index="${index}">Delete</button>
                 </div>
             `).join('');
+            
+            // Add event listeners
+            container.querySelectorAll('[data-toggle-todo]').forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    const todoType = e.target.dataset.toggleTodo;
+                    const index = parseInt(e.target.dataset.todoIndex);
+                    toggleTodo(todoType, index);
+                });
+            });
+            
+            container.querySelectorAll('[data-todo-text]').forEach(span => {
+                span.addEventListener('blur', (e) => {
+                    const todoType = e.target.dataset.todoText;
+                    const index = parseInt(e.target.dataset.todoIndex);
+                    updateTodoText(todoType, index, e.target.textContent);
+                });
+            });
+            
+            container.querySelectorAll('[data-delete-todo]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const todoType = e.target.dataset.deleteTodo;
+                    const index = parseInt(e.target.dataset.todoIndex);
+                    deleteTodo(todoType, index);
+                });
+            });
         }
 
         function addTodo(type) {
@@ -969,6 +994,12 @@
         renderTodos('academic');
         renderTodos('personal');
         updateTasksCompleted();
+        
+        // Add button event listeners
+        document.getElementById('addAcademicBtn').addEventListener('click', () => addTodo('academic'));
+        document.getElementById('addPersonalBtn').addEventListener('click', () => addTodo('personal'));
+        document.getElementById('addHabitBtn').addEventListener('click', addHabit);
+        document.getElementById('addGoalBtn').addEventListener('click', addGoal);
 
         // Pomodoro Timer
         let timerInterval;
@@ -1072,16 +1103,46 @@
             const container = document.getElementById('habits');
             container.innerHTML = habits.map((habit, index) => `
                 <div class="habit ${habit.count > 0 ? 'active' : ''}" data-habit-index="${index}">
-                    <button class="habit-delete" onclick="deleteHabit(${index})">×</button>
-                    <div class="habit-icon" contenteditable="true" onblur="updateHabitIcon(${index}, this.textContent)">${habit.icon}</div>
-                    <div class="habit-name" contenteditable="true" onblur="updateHabitName(${index}, this.textContent)">${habit.name}</div>
+                    <button class="habit-delete" data-delete-habit="${index}">×</button>
+                    <div class="habit-icon" contenteditable="true" data-habit-icon="${index}">${habit.icon}</div>
+                    <div class="habit-name" contenteditable="true" data-habit-name="${index}">${habit.name}</div>
                     <div class="streak" data-count="${habit.count}">${habit.count} 🔥</div>
                     <div class="habit-controls">
-                        <button class="habit-btn minus" onclick="adjustHabit(${index}, -1)">−</button>
-                        <button class="habit-btn plus" onclick="adjustHabit(${index}, 1)">+</button>
+                        <button class="habit-btn minus" data-adjust-habit="${index}" data-change="-1">−</button>
+                        <button class="habit-btn plus" data-adjust-habit="${index}" data-change="1">+</button>
                     </div>
                 </div>
             `).join('');
+            
+            // Add event listeners after rendering
+            container.querySelectorAll('[data-delete-habit]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.deleteHabit);
+                    deleteHabit(index);
+                });
+            });
+            
+            container.querySelectorAll('[data-habit-icon]').forEach(el => {
+                el.addEventListener('blur', (e) => {
+                    const index = parseInt(e.target.dataset.habitIcon);
+                    updateHabitIcon(index, e.target.textContent);
+                });
+            });
+            
+            container.querySelectorAll('[data-habit-name]').forEach(el => {
+                el.addEventListener('blur', (e) => {
+                    const index = parseInt(e.target.dataset.habitName);
+                    updateHabitName(index, e.target.textContent);
+                });
+            });
+            
+            container.querySelectorAll('[data-adjust-habit]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.adjustHabit);
+                    const change = parseInt(e.target.dataset.change);
+                    adjustHabit(index, change);
+                });
+            });
         }
 
         function addHabit() {
@@ -1126,17 +1187,39 @@
             const container = document.getElementById('goalsContainer');
             container.innerHTML = goals.map((goal, index) => `
                 <div class="goal-item">
-                    <button class="goal-delete" onclick="deleteGoal(${index})">Delete</button>
+                    <button class="goal-delete" data-delete-goal="${index}">Delete</button>
                     <div class="goal-name">
-                        <span contenteditable="true" onblur="updateGoalName(${index}, this.textContent)">${goal.name}</span>
+                        <span contenteditable="true" data-goal-name="${index}">${goal.name}</span>
                         <span class="goal-percent">${goal.progress}%</span>
                     </div>
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: ${goal.progress}%"></div>
                     </div>
-                    <input type="range" min="0" max="100" value="${goal.progress}" oninput="updateGoalProgress(${index}, this.value)">
+                    <input type="range" min="0" max="100" value="${goal.progress}" data-goal-slider="${index}">
                 </div>
             `).join('');
+            
+            // Add event listeners after rendering
+            container.querySelectorAll('[data-delete-goal]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.target.dataset.deleteGoal);
+                    deleteGoal(index);
+                });
+            });
+            
+            container.querySelectorAll('[data-goal-name]').forEach(el => {
+                el.addEventListener('blur', (e) => {
+                    const index = parseInt(e.target.dataset.goalName);
+                    updateGoalName(index, e.target.textContent);
+                });
+            });
+            
+            container.querySelectorAll('[data-goal-slider]').forEach(slider => {
+                slider.addEventListener('input', (e) => {
+                    const index = parseInt(e.target.dataset.goalSlider);
+                    updateGoalProgress(index, e.target.value);
+                });
+            });
         }
 
         function addGoal() {
