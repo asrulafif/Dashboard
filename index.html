@@ -269,15 +269,44 @@
             background: rgba(255, 255, 255, 0.03);
             border-radius: 12px;
             transition: all 0.3s;
+            position: relative;
         }
 
         .habit:hover {
             background: rgba(255, 255, 255, 0.08);
         }
 
+        .habit:hover .habit-delete {
+            opacity: 1;
+        }
+
         .habit.active {
             background: rgba(76, 175, 80, 0.2);
             border: 1px solid rgba(76, 175, 80, 0.4);
+        }
+
+        .habit-delete {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(244, 67, 54, 0.3);
+            border: none;
+            color: #f44336;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 0.8em;
+            opacity: 0;
+            transition: all 0.2s;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .habit-delete:hover {
+            background: rgba(244, 67, 54, 0.5);
         }
 
         .habit-icon {
@@ -341,6 +370,30 @@
 
         .goal-item {
             margin-bottom: 20px;
+            position: relative;
+        }
+
+        .goal-item:hover .goal-delete {
+            opacity: 1;
+        }
+
+        .goal-delete {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            color: #f44336;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            opacity: 0;
+            transition: all 0.2s;
+        }
+
+        .goal-delete:hover {
+            background: rgba(244, 67, 54, 0.3);
         }
 
         .goal-name {
@@ -635,69 +688,15 @@
             <!-- Habits -->
             <div class="card">
                 <h2>🎯 Daily Habits</h2>
-                <div class="habit-grid" id="habits">
-                    <div class="habit" data-habit="exercise">
-                        <div class="habit-icon">🏃</div>
-                        <div class="habit-name">Exercise</div>
-                        <div class="streak" data-count="0">0 🔥</div>
-                        <div class="habit-controls">
-                            <button class="habit-btn minus" onclick="adjustHabit('exercise', -1)">−</button>
-                            <button class="habit-btn plus" onclick="adjustHabit('exercise', 1)">+</button>
-                        </div>
-                    </div>
-                    <div class="habit" data-habit="read">
-                        <div class="habit-icon">📚</div>
-                        <div class="habit-name">Read</div>
-                        <div class="streak" data-count="0">0 🔥</div>
-                        <div class="habit-controls">
-                            <button class="habit-btn minus" onclick="adjustHabit('read', -1)">−</button>
-                            <button class="habit-btn plus" onclick="adjustHabit('read', 1)">+</button>
-                        </div>
-                    </div>
-                    <div class="habit" data-habit="meditate">
-                        <div class="habit-icon">🧘</div>
-                        <div class="habit-name">Meditate</div>
-                        <div class="streak" data-count="0">0 🔥</div>
-                        <div class="habit-controls">
-                            <button class="habit-btn minus" onclick="adjustHabit('meditate', -1)">−</button>
-                            <button class="habit-btn plus" onclick="adjustHabit('meditate', 1)">+</button>
-                        </div>
-                    </div>
-                    <div class="habit" data-habit="code">
-                        <div class="habit-icon">💻</div>
-                        <div class="habit-name">Code</div>
-                        <div class="streak" data-count="0">0 🔥</div>
-                        <div class="habit-controls">
-                            <button class="habit-btn minus" onclick="adjustHabit('code', -1)">−</button>
-                            <button class="habit-btn plus" onclick="adjustHabit('code', 1)">+</button>
-                        </div>
-                    </div>
-                </div>
+                <div class="habit-grid" id="habits"></div>
+                <button class="add-todo-btn" onclick="addHabit()">+ Add Habit</button>
             </div>
 
             <!-- Goals Progress -->
             <div class="card">
                 <h2>🎯 Goals Progress</h2>
-                <div class="goal-item">
-                    <div class="goal-name">
-                        <span contenteditable="true" id="goal1-name">Learn JavaScript</span>
-                        <span id="goal1-percent">0%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="goal1-progress" style="width: 0%"></div>
-                    </div>
-                    <input type="range" min="0" max="100" value="0" id="goal1-slider">
-                </div>
-                <div class="goal-item">
-                    <div class="goal-name">
-                        <span contenteditable="true" id="goal2-name">Build Portfolio</span>
-                        <span id="goal2-percent">0%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="goal2-progress" style="width: 0%"></div>
-                    </div>
-                    <input type="range" min="0" max="100" value="0" id="goal2-slider">
-                </div>
+                <div id="goalsContainer"></div>
+                <button class="add-todo-btn" onclick="addGoal()">+ Add Goal</button>
             </div>
 
             <!-- Pomodoro Timer -->
@@ -1061,71 +1060,111 @@
             saveToStorage('sleepHours', sleepInput.value);
         });
 
-        // Habits
-        const savedHabits = loadFromStorage('habits', {});
+        // Habits Management
+        let habits = loadFromStorage('habits', [
+            { id: 'exercise', name: 'Exercise', icon: '🏃', count: 0 },
+            { id: 'read', name: 'Read', icon: '📚', count: 0 },
+            { id: 'meditate', name: 'Meditate', icon: '🧘', count: 0 },
+            { id: 'code', name: 'Code', icon: '💻', count: 0 }
+        ]);
 
-        function adjustHabit(habitName, change) {
-            const habit = document.querySelector(`[data-habit="${habitName}"]`);
-            const streakEl = habit.querySelector('.streak');
-            let count = parseInt(streakEl.getAttribute('data-count'));
-            
-            count = Math.max(0, count + change);
-            
-            streakEl.setAttribute('data-count', count);
-            streakEl.textContent = `${count} 🔥`;
-            
-            if (count > 0) {
-                habit.classList.add('active');
-            } else {
-                habit.classList.remove('active');
-            }
-            
-            savedHabits[habitName] = count;
-            saveToStorage('habits', savedHabits);
+        function renderHabits() {
+            const container = document.getElementById('habits');
+            container.innerHTML = habits.map((habit, index) => `
+                <div class="habit ${habit.count > 0 ? 'active' : ''}" data-habit-index="${index}">
+                    <button class="habit-delete" onclick="deleteHabit(${index})">×</button>
+                    <div class="habit-icon" contenteditable="true" onblur="updateHabitIcon(${index}, this.textContent)">${habit.icon}</div>
+                    <div class="habit-name" contenteditable="true" onblur="updateHabitName(${index}, this.textContent)">${habit.name}</div>
+                    <div class="streak" data-count="${habit.count}">${habit.count} 🔥</div>
+                    <div class="habit-controls">
+                        <button class="habit-btn minus" onclick="adjustHabit(${index}, -1)">−</button>
+                        <button class="habit-btn plus" onclick="adjustHabit(${index}, 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        // Load saved habits
-        Object.keys(savedHabits).forEach(habitName => {
-            const habit = document.querySelector(`[data-habit="${habitName}"]`);
-            if (habit) {
-                const streakEl = habit.querySelector('.streak');
-                const count = savedHabits[habitName];
-                streakEl.setAttribute('data-count', count);
-                streakEl.textContent = `${count} 🔥`;
-                if (count > 0) habit.classList.add('active');
-            }
-        });
+        function addHabit() {
+            habits.push({ id: Date.now().toString(), name: 'New Habit', icon: '⭐', count: 0 });
+            saveToStorage('habits', habits);
+            renderHabits();
+        }
 
-        // Goals
-        const savedGoals = loadFromStorage('goals', {});
+        function adjustHabit(index, change) {
+            habits[index].count = Math.max(0, habits[index].count + change);
+            saveToStorage('habits', habits);
+            renderHabits();
+        }
 
-        ['goal1', 'goal2'].forEach(goalId => {
-            const slider = document.getElementById(`${goalId}-slider`);
-            const progress = document.getElementById(`${goalId}-progress`);
-            const percent = document.getElementById(`${goalId}-percent`);
-            const nameEl = document.getElementById(`${goalId}-name`);
-            
-            if (savedGoals[goalId]) {
-                slider.value = savedGoals[goalId].progress;
-                progress.style.width = `${savedGoals[goalId].progress}%`;
-                percent.textContent = `${savedGoals[goalId].progress}%`;
-                nameEl.textContent = savedGoals[goalId].name;
+        function updateHabitName(index, name) {
+            habits[index].name = name;
+            saveToStorage('habits', habits);
+        }
+
+        function updateHabitIcon(index, icon) {
+            habits[index].icon = icon;
+            saveToStorage('habits', habits);
+        }
+
+        function deleteHabit(index) {
+            if (confirm('Delete this habit?')) {
+                habits.splice(index, 1);
+                saveToStorage('habits', habits);
+                renderHabits();
             }
-            
-            slider.addEventListener('input', () => {
-                const value = slider.value;
-                progress.style.width = `${value}%`;
-                percent.textContent = `${value}%`;
-                savedGoals[goalId] = { progress: value, name: nameEl.textContent };
-                saveToStorage('goals', savedGoals);
-            });
-            
-            nameEl.addEventListener('blur', () => {
-                if (!savedGoals[goalId]) savedGoals[goalId] = { progress: 0 };
-                savedGoals[goalId].name = nameEl.textContent;
-                saveToStorage('goals', savedGoals);
-            });
-        });
+        }
+
+        renderHabits();
+
+        // Goals Management
+        let goals = loadFromStorage('goals', [
+            { id: 'goal1', name: 'Learn JavaScript', progress: 0 },
+            { id: 'goal2', name: 'Build Portfolio', progress: 0 }
+        ]);
+
+        function renderGoals() {
+            const container = document.getElementById('goalsContainer');
+            container.innerHTML = goals.map((goal, index) => `
+                <div class="goal-item">
+                    <button class="goal-delete" onclick="deleteGoal(${index})">Delete</button>
+                    <div class="goal-name">
+                        <span contenteditable="true" onblur="updateGoalName(${index}, this.textContent)">${goal.name}</span>
+                        <span class="goal-percent">${goal.progress}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${goal.progress}%"></div>
+                    </div>
+                    <input type="range" min="0" max="100" value="${goal.progress}" oninput="updateGoalProgress(${index}, this.value)">
+                </div>
+            `).join('');
+        }
+
+        function addGoal() {
+            goals.push({ id: Date.now().toString(), name: 'New Goal', progress: 0 });
+            saveToStorage('goals', goals);
+            renderGoals();
+        }
+
+        function updateGoalName(index, name) {
+            goals[index].name = name;
+            saveToStorage('goals', goals);
+        }
+
+        function updateGoalProgress(index, progress) {
+            goals[index].progress = parseInt(progress);
+            saveToStorage('goals', goals);
+            renderGoals();
+        }
+
+        function deleteGoal(index) {
+            if (confirm('Delete this goal?')) {
+                goals.splice(index, 1);
+                saveToStorage('goals', goals);
+                renderGoals();
+            }
+        }
+
+        renderGoals();
 
         // Notes persistence
         const notesArea = document.getElementById('notes');
