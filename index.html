@@ -889,8 +889,8 @@
         setInterval(fetchNews, 1800000);
 
         // To-Do List Management
-        let academicTodos = loadFromStorage('academicTodos', []);
-        let personalTodos = loadFromStorage('personalTodos', []);
+        var academicTodos = loadFromStorage('academicTodos', []);
+        var personalTodos = loadFromStorage('personalTodos', []);
 
         function renderTodos(type) {
             const todos = type === 'academic' ? academicTodos : personalTodos;
@@ -1009,10 +1009,10 @@
         });
 
         // Pomodoro Timer
-        let timerInterval;
-        let timeLeft = 25 * 60;
-        let isRunning = false;
-        let pomodoroCount = loadFromStorage('pomodoroCount', 0);
+        var timerInterval;
+        var timeLeft = 25 * 60;
+        var isRunning = false;
+        var pomodoroCount = loadFromStorage('pomodoroCount', 0);
         document.getElementById('pomodoroCount').textContent = pomodoroCount;
 
         function updateTimerDisplay() {
@@ -1099,8 +1099,7 @@
         });
 
         // Habits Management
-        // Migrate old habit data format to new array format
-        let habits = loadFromStorage('habits', null);
+        var habits = loadFromStorage('habits', null);
         if (!Array.isArray(habits)) {
             // Old format was an object, convert to array
             if (habits && typeof habits === 'object') {
@@ -1201,8 +1200,7 @@
         renderHabits();
 
         // Goals Management
-        // Migrate old goals data format to new array format
-        let goals = loadFromStorage('goals', null);
+        var goals = loadFromStorage('goals', null);
         if (!Array.isArray(goals)) {
             // Old format was an object, convert to array
             if (goals && typeof goals === 'object') {
